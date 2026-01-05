@@ -10,8 +10,6 @@ const getByKey = (db: string, store: string, key?: string): Resource|undefined =
   return data ? JSON.parse(data) as Resource : undefined
 }
 
-// TODO: Indexes are limited to only one record.
-
 const createDB = (config: WaormDatabaseConfig<WindowLocalStorage>): WaormDatabaseConnection<WindowLocalStorage> => {
   config.stores.forEach(store => {
     const indexTable = JSON.parse(localStorage.getItem(`WAORM:__${config.name}_${store.name}`) || '{}')
