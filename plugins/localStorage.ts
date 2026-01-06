@@ -23,7 +23,7 @@ const createDB = (config: WaormDatabaseConfig<WindowLocalStorage>): WaormDatabas
       }
     })
 
-    indexTable['__keys'] = []
+    indexTable['__keys'] = indexTable['__keys'] ?? []
 
     localStorage.setItem(`WAORM:__${config.name}_${store.name}`, JSON.stringify(indexTable))
   })
