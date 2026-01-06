@@ -43,8 +43,14 @@ const handleRequest = async <T = any>(request: IDBRequest, callback?: (e: Cursor
   }
 })
 
-const createStore = (database: IDBDatabase, store: WaormStore) => {
+const createStore = (database: IDBDatabase, transaction: IDBTransaction, store: WaormStore) => {
   if (database.objectStoreNames.contains(store.name)) {
+    store.indexes.forEach(({ name, path, unique }) => {
+      if (! transaction.objectStore(store.name).indexNames.contains(name)) {
+        // @ts-ignore
+        transaction.objectStore(store.name).createIndex(name, path || name, { unique })
+      }
+    })
     return
   }
 
@@ -120,18 +126,23 @@ const createDatabaseConnection = (config: WaormDatabaseConfig<IDBDatabase>, idb:
               case 'equals':
                 items.push(cursor.value)
                 break
+              case 'equals_many':
+                if (cursor.value[index].toString() === search?.toString()) {
+                  items.push(cursor.value)
+                }
+                break
               case 'not_equals':
-                if (cursor.value[index].toString() !== search) {
+                if (cursor.value[index].toString() !== search?.toString()) {
                   items.push(cursor.value)
                 }
                 break
               case 'includes':
-                if (cursor.value[index].toString().includes(search)) {
+                if (cursor.value[index].toString().includes(search?.toString())) {
                   items.push(cursor.value)
                 }
                 break
               case 'not_includes':
-                if (! cursor.value[index].toString().includes(search)) {
+                if (! cursor.value[index].toString().includes(search?.toString())) {
                   items.push(cursor.value)
                 }
                 break
@@ -210,11 +221,14 @@ const plugin: WaormConnectionPlugin<IDBDatabase> = {
       // todo this
     }
 
-    openRequest.onupgradeneeded = () => {
-      const idb = openRequest.result
+    openRequest.onupgradeneeded = (e: IDBVersionChangeEvent) => {
+      // @ts-ignore
+      const idb = e.target.result
 
       config.stores.forEach(store => {
-        createStore(idb, store)
+        // @ts-ignore
+        createStore(idb, e.target.transaction, store)
+        // todo delete existing stores and indexes that are not in config
       })
     }
 
