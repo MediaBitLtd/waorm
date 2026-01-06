@@ -42,23 +42,26 @@ const createDB = (config: WaormDatabaseConfig<WindowLocalStorage>): WaormDatabas
 
       storeConfig.indexes.forEach(index => {
         const indexConfig = indexTable[index.name]
-        const value = (data as any)[indexConfig.key]?.toString()
-
-        if (! value) {
-          return
-        }
+        const indexedValue = (data as any)[indexConfig.key]?.toString()
 
         const values = JSON.parse(localStorage.getItem(`WAORM:__${config.name}_${store}_${index.name}`) || '{}')
+
         for (const k in values) {
           if (values[k] && values[k].includes(key)) {
             values[k].splice(values[k].indexOf(key), 1)
           }
         }
 
-        if (! values[value]) {
-          values[value] = []
+        if (! indexedValue) {
+          localStorage.setItem(`WAORM:__${config.name}_${store}_${index.name}`, JSON.stringify(values))
+          return
         }
-        values[value].push(key)
+
+        if (! values[indexedValue]) {
+          values[indexedValue] = []
+        }
+
+        values[indexedValue].push(key)
 
         localStorage.setItem(`WAORM:__${config.name}_${store}_${index.name}`, JSON.stringify(values))
       })
@@ -72,6 +75,36 @@ const createDB = (config: WaormDatabaseConfig<WindowLocalStorage>): WaormDatabas
       localStorage.setItem(`WAORM:${config.name}_${store}:${key.toString()}`, JSON.stringify(data))
 
       return data
+    },
+    delete: async (store, key) => {
+      const storeConfig = config.stores.find(s => s.name === store)
+      if (! storeConfig) {
+        throw new Error('Invalid store')
+      }
+
+      const indexTable = JSON.parse(localStorage.getItem(`WAORM:__${config.name}_${store}`) || '{}')
+
+      storeConfig.indexes.forEach(index => {
+        const values = JSON.parse(localStorage.getItem(`WAORM:__${ config.name }_${ store }_${ index.name }`) || '{}')
+
+        for (const k in values) {
+          if (values[k] && values[k].includes(key)) {
+            values[k].splice(values[k].indexOf(key), 1)
+          }
+        }
+
+        localStorage.setItem(`WAORM:__${ config.name }_${ store }_${ index.name }`, JSON.stringify(values))
+      })
+
+      if (indexTable.__keys.includes(key)) {
+        indexTable.__keys.splice(indexTable.__keys.indexOf(key), 1)
+        indexTable.__keys.sort()
+        localStorage.setItem(`WAORM:__${config.name}_${store}`, JSON.stringify(indexTable))
+      }
+
+      localStorage.removeItem(`WAORM:${config.name}_${store}:${key.toString()}`)
+
+      return true
     },
     where:  async (store, index, search, options) => {
       const limit = options?.limit

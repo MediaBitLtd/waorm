@@ -10,6 +10,10 @@ let connection: WaormDatabaseConnection<any>|undefined
 
 export const setDBConnection = <T>(databaseConnection: WaormDatabaseConnection<T>) => connection = databaseConnection
 
+export const generateNewId = (): string => 'generated_' + (Math.random() + 1).toString(36).substring(2)
+
+export const generateNewSlug = (): string => Math.floor((new Date).getTime() / 1000) + (Math.random() + 1).toString(36).substring(2) + (new Date).getFullYear()
+
 export default abstract class Model <R = Resource> {
   public id?: Resource['id'] = undefined
 
@@ -93,6 +97,20 @@ export default abstract class Model <R = Resource> {
     }
 
     return this
+  }
+
+  async delete(): Promise<boolean> {
+    const key = this.getKey()
+    if (! key) {
+      throw new Error('Model has no key to store. Make sure your key is hydrated')
+    }
+
+    try {
+      return await this.connection()?.delete(this.storeName(), this.parseKey(key)) || false
+    } catch (err) {
+      // todo handle errors
+      throw err
+    }
   }
 
   async find(field: string, search: any): Promise<this|undefined> {

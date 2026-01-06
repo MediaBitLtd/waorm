@@ -1,5 +1,6 @@
 import { initDB } from './database'
-import Model from './model'
+import { collect } from './collector'
+import Model, { generateNewId, generateNewSlug } from './model'
 
 export type WaormRelationshipBag = { [k: string]: WaormRelationship }
 
@@ -19,7 +20,15 @@ export interface WaormDatabaseConnection<T> {
   get: (store: string, key: Resource['id']) => Promise<Resource | undefined>;
   set: (store: string, key: Resource['id'], data: Resource) => Promise<Resource>;
   all: (store: string, index?: string, options?: WaormCursorOptions) => Promise<Resource[]|Resource|undefined>;
+  delete: (store: string, key: Resource['id']) => Promise<boolean>;
   where: (store: string, index: string, search: string, options?: WaormSearchOptions) => Promise<Resource[]|Resource|undefined>;
+}
+
+export interface WaormQueryCollector<T = typeof Model> {
+  delete: () => Promise<boolean>;
+  each: (callback: (model: T) => Promise<any>) => Promise<void>;
+  items: () => Promise<T[]>;
+  count: () => Promise<number>;
 }
 
 export interface WaormDatabaseConfig<T> {
@@ -57,4 +66,10 @@ export interface WaormStoreIndex {
   unique?: boolean;
 }
 
-export { initDB, Model }
+export {
+  Model,
+  initDB,
+  collect,
+  generateNewId,
+  generateNewSlug,
+}
