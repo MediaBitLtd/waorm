@@ -95,6 +95,20 @@ export default abstract class Model <R = Resource> {
     return this
   }
 
+  async delete(): Promise<boolean> {
+    const key = this.getKey()
+    if (! key) {
+      throw new Error('Model has no key to store. Make sure your key is hydrated')
+    }
+
+    try {
+      return await this.connection()?.delete(this.storeName(), this.parseKey(key)) || false
+    } catch (err) {
+      // todo handle errors
+      throw err
+    }
+  }
+
   async find(field: string, search: any): Promise<this|undefined> {
     try {
       const data = await this.connection()?.where(this.storeName(), field, search)

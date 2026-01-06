@@ -79,6 +79,18 @@ const createDatabaseConnection = (config: WaormDatabaseConfig<IDBDatabase>, idb:
 
       return data
     },
+    delete: async (store, key) => {
+      try {
+        await handleRequest<Resource|undefined>(idb
+          .transaction(store, 'readwrite')
+          .objectStore(store)
+          .delete(key))
+      } catch (err) {
+        return false
+      }
+
+      return true
+    },
     where: async (store, index, search, options) => {
       const limit = options?.limit
       const offset = options?.offset || 0

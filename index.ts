@@ -19,6 +19,7 @@ export interface WaormDatabaseConnection<T> {
   get: (store: string, key: Resource['id']) => Promise<Resource | undefined>;
   set: (store: string, key: Resource['id'], data: Resource) => Promise<Resource>;
   all: (store: string, index?: string, options?: WaormCursorOptions) => Promise<Resource[]|Resource|undefined>;
+  delete: (store: string, key: Resource['id']) => Promise<boolean>;
   where: (store: string, index: string, search: string, options?: WaormSearchOptions) => Promise<Resource[]|Resource|undefined>;
 }
 
