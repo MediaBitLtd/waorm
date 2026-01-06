@@ -28,7 +28,7 @@ Waorm includes IndexedDB and LocalStorage, though it's certainly recommended to 
 Creating a model is easy! It is done by classes to make it easier to manipulate but it's super simple, just follow the example bellow:
 
 ```javascript
-import { Model } from 'waorm'
+import { Model } from '@wakit/waorm'
 
 export default class User extends Model {
   storeName(): string {
@@ -42,8 +42,8 @@ export const user = () => (new User)
 We also support typescript so here's an example of a more complex model with relationships, all typed
 
 ```typescript
-import { Model } from 'waorm'
-import type { Resource, WaormRelationshipBag } from 'waorm'
+import { Model } from '@wakit/waorm'
+import type { Resource, WaormRelationshipBag } from '@wakit/waorm'
 
 import Todo from '~/models/todo'
 
@@ -112,7 +112,7 @@ Here is an example setup for a simple Todo App
 #### JavaScript
 ```javascript
 
-import { initDB, Model } from 'waorm'
+import { initDB, Model } from '@wakit/waorm'
 
 class Todo extends Model {
   relationships() {
@@ -181,8 +181,8 @@ await todo().hydrate({ name: 'Clean room', due_by: '2025-01-01', user_id: myUser
 ```
 #### TypeScript
 ```typescript
-import { initDB, Model } from 'waorm'
-import type { Resource, WaormRelationshipBag } from 'waorm'
+import { initDB, Model } from '@wakit/waorm'
+import type { Resource, WaormRelationshipBag } from '@wakit/waorm'
 
 interface TodoResource extends Resource {
   due_by: string;
