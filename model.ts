@@ -10,6 +10,10 @@ let connection: WaormDatabaseConnection<any>|undefined
 
 export const setDBConnection = <T>(databaseConnection: WaormDatabaseConnection<T>) => connection = databaseConnection
 
+export const generateNewId = (): string => 'generated_' + (Math.random() + 1).toString(36).substring(2)
+
+export const generateNewSlug = (): string => Math.floor((new Date).getTime() / 1000) + (Math.random() + 1).toString(36).substring(2) + (new Date).getFullYear()
+
 export default abstract class Model <R = Resource> {
   public id?: Resource['id'] = undefined
 
