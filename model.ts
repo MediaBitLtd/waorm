@@ -27,8 +27,21 @@ export default abstract class Model <R = Resource> {
     return {}
   }
 
+  getKeyField(): string {
+    return 'id'
+  }
+
   getKey(): Resource['id'] | undefined {
-    return this.id
+    // @ts-ignore
+    return this[this.getKeyField()]
+  }
+
+  generateKey(): Resource['id'] {
+    const key = generateNewId()
+
+    // @ts-ignore
+    this[this.getKeyField()] = key
+    return key
   }
 
   newInstance(): this {
@@ -83,9 +96,10 @@ export default abstract class Model <R = Resource> {
   }
 
   async save(): Promise<this> {
-    const key = this.getKey()
+    let key = this.getKey()
+
     if (! key) {
-      throw new Error('Model has no key to store. Make sure your key is hydrated')
+      key = this.generateKey()
     }
 
     try {

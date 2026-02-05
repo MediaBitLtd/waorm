@@ -28,6 +28,7 @@ export interface WaormQueryCollector<T = typeof Model> {
   delete: () => Promise<boolean>;
   each: (callback: (model: T) => Promise<any>) => Promise<void>;
   items: () => Promise<T[]>;
+  itemsAsResource: <R>() => Promise<R[]>;
   count: () => Promise<number>;
 }
 

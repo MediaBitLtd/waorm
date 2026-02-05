@@ -31,4 +31,9 @@ export const collect = <T = typeof Model>(query: Promise<Model[]>): WaormQueryCo
   items: async () => {
     return await query as T[]
   },
+  itemsAsResource: async <R>() => {
+    const items = await query as T[]
+
+    return items.map(item => (item as Model).resource() as R)
+  },
 })
