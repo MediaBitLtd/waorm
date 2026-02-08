@@ -4,9 +4,25 @@ import Model, { generateNewId, generateNewSlug } from './model'
 
 export type WaormRelationshipBag = { [k: string]: WaormRelationship }
 
+export type WaormKey = string | number;
+
+export type WaormDate = string | Date;
+
 export interface Resource {
-  id: string | number;
-  created_at: string; // todo maybe a date type
+  id?: WaormKey;
+  created_at?: WaormDate | undefined;
+}
+
+export interface ModelParamBag<T = any> {
+  new?: boolean;
+  instance?: boolean;
+  original?: any;
+  markForDeletion?: boolean;
+  preloadRelations?: WaormRelationshipBag | undefined;
+
+  lastUpdated: WaormDate | undefined;
+  lastSynced: WaormDate | undefined;
+  syncErrors: T[];
 }
 
 export interface WaormConnectionPlugin<T> {
@@ -66,6 +82,11 @@ export interface WaormStoreIndex {
   path?: string;
   unique?: boolean;
 }
+
+export {
+  onDatabaseInitError,
+  onModelOperationError,
+} from 'events'
 
 export {
   Model,
