@@ -249,7 +249,7 @@ export default abstract class Model <R = Resource> {
     }
 
     if (key.toString().trim() === '') {
-      return key
+      return key.toString().trim()
     }
 
     // @ts-ignore

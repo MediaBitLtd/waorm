@@ -4,7 +4,7 @@ import Model, { generateNewId, generateNewSlug } from './model'
 
 export type WaormRelationshipBag = { [k: string]: WaormRelationship }
 
-export type WaormKey = string | number;
+export type WaormKey = string | number | IDBValidKey;
 
 export type WaormDate = string | Date;
 
@@ -33,10 +33,10 @@ export interface WaormDatabaseConnection<T> {
   name: WaormDatabaseConfig<T>['name'];
   config: WaormDatabaseConfig<T>;
   getEngine: () => T | undefined;
-  get: (store: string, key: Resource['id']) => Promise<Resource | undefined>;
-  set: (store: string, key: Resource['id'], data: Resource) => Promise<Resource>;
+  get: (store: string, key: WaormKey) => Promise<Resource | undefined>;
+  set: (store: string, key: WaormKey, data: Resource) => Promise<Resource>;
   all: (store: string, index?: string, options?: WaormCursorOptions) => Promise<Resource[]|Resource|undefined>;
-  delete: (store: string, key: Resource['id']) => Promise<boolean>;
+  delete: (store: string, key: WaormKey) => Promise<boolean>;
   where: (store: string, index: string, search: string, options?: WaormSearchOptions) => Promise<Resource[]|Resource|undefined>;
 }
 
@@ -86,7 +86,7 @@ export interface WaormStoreIndex {
 export {
   onDatabaseInitError,
   onModelOperationError,
-} from 'events'
+} from './events'
 
 export {
   Model,
