@@ -24,6 +24,14 @@ export const generateNewId = (): string => 'generated_' + (Math.random() + 1).to
 
 export const generateNewSlug = (): string => Math.floor((new Date).getTime() / 1000) + (Math.random() + 1).toString(36).substring(2) + (new Date).getFullYear()
 
+export const isDirty = (resource: ModelResource) => {
+  if (resource[paramBagSymbol] && resource[paramBagSymbol].original) {
+    return JSON.stringify(resource) !== resource[paramBagSymbol].original
+  }
+
+  return true
+}
+
 export default abstract class Model <R = ModelResource, E = any> {
   public id?: ModelResource['id'] = undefined;
   public [paramBagSymbol]?: ModelParamBag<E> = undefined;
@@ -52,6 +60,15 @@ export default abstract class Model <R = ModelResource, E = any> {
 
   connection(): WaormDatabaseConnection<any>|undefined {
     return connection
+  }
+
+  // Getters
+  isDirty(): boolean {
+    return isDirty(this.resource())
+  }
+
+  isClean(): boolean {
+    return ! isDirty(this.resource())
   }
 
   // Mutators
