@@ -32,6 +32,14 @@ export const isDirty = (resource: ModelResource) => {
   return true
 }
 
+export const isNew = (resource: ModelResource) => {
+  return ! resource[paramBagSymbol] || !! resource[paramBagSymbol].new
+}
+
+export const isInstance = (resource: ModelResource) => {
+  return !! resource[paramBagSymbol]?.instance
+}
+
 export default abstract class Model <R = ModelResource, E = any> {
   public id?: ModelResource['id'] = undefined;
   public [paramBagSymbol]?: ModelParamBag<E> = undefined;
@@ -69,6 +77,14 @@ export default abstract class Model <R = ModelResource, E = any> {
 
   isClean(): boolean {
     return ! isDirty(this.resource())
+  }
+
+  isNew(): boolean {
+    return isNew(this.resource())
+  }
+
+  isInstance(): boolean {
+    return isInstance(this.resource())
   }
 
   // Mutators

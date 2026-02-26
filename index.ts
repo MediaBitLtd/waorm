@@ -1,6 +1,6 @@
 import { initDB } from './database'
 import { collect } from './collector'
-import Model, { generateNewId, generateNewSlug, isDirty } from './model'
+import Model, { generateNewId, generateNewSlug, isDirty, isNew, isInstance } from './model'
 
 export type WaormRelationshipBag = { [k: string]: WaormRelationship }
 
@@ -95,4 +95,6 @@ export {
   generateNewId,
   generateNewSlug,
   isDirty,
+  isNew,
+  isInstance,
 }
