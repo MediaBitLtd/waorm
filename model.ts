@@ -91,10 +91,8 @@ export default abstract class Model <R = ModelResource, E = any> {
   generateKey(): WaormKey {
     const key = generateNewId()
 
-    if (this[paramBagSymbol]?.instance) {
-      // @ts-ignore
-      this[this.getKeyField()] = key
-    }
+    // @ts-ignore
+    this[this.getKeyField()] = key
 
     return key
   }

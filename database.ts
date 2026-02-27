@@ -18,6 +18,7 @@ export const initDB = async <T = IDBDatabase> (config: WaormDatabaseConfig<T>) =
       : await indexedDB.setup(config as WaormDatabaseConfig<any>)
   } catch (err) {
     dispatch(DB_INIT_ERROR, err)
+    throw err
   }
 
   if (config.default !== false) {

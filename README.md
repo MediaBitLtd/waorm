@@ -74,6 +74,76 @@ export default class User extends Model<UserResource> {
 export const user = () => (new User)
 ```
 
+##### Custom Key Fields
+
+By default models use `id` as the primary key. Override `getKeyField()` to use a different field:
+
+```typescript
+class Post extends Model {
+  public slug?: string
+
+  storeName() { return 'posts' }
+  getKeyField() { return 'slug' }
+}
+```
+
+##### Field Filtering
+
+Override `fields()` to control which fields are hydrated from data. By default, or when empty, all fields will be hydrated. When a list is supplied, fields not in the list are ignored:
+
+```typescript
+class User extends Model {
+  public name?: string
+  public email?: string
+
+  storeName() { return 'users' }
+  fields() { return ['id', 'name', 'email'] }
+}
+```
+
+##### Dirty Tracking & State
+
+Models track state after hydration:
+
+```typescript
+const user = await new User().get('u1')
+
+user.isDirty()    // false — unchanged since hydrate
+user.isClean()    // true
+user.isNew()      // false — has a persisted key
+user.isInstance()  // true — has been hydrated
+
+user.name = 'New Name'
+user.isDirty()    // true
+```
+
+Standalone functions `isDirty`, `isNew`, `isInstance` are also exported for use with plain resource objects.
+
+##### Auto Key Generation
+
+Calling `save()` on a model without a key auto-generates one:
+
+```typescript
+const user = new User().hydrate({ name: 'Alice', email: 'a@b.com' })
+await user.save()
+console.log(user.id) // 'generated_...'
+```
+
+##### Collecting Results
+
+Use `collect()` to wrap queries with helpers:
+
+```typescript
+import { collect } from '@wakit/waorm'
+
+const c = collect(new User().all())
+await c.count()               // number of results
+await c.items()               // Model instances
+await c.itemsAsResource()     // plain resource objects
+await c.each(async u => { })  // iterate
+await c.delete()              // delete all matched
+```
+
 #### Database
 
 In order to use your models, you need to set up the database. When initializing, by default, it sets the connection
@@ -103,6 +173,19 @@ initDB({
     },
   ],
 })
+```
+
+#### Error Handling
+
+`initDB` throws on failure after dispatching an event. Wrap in try/catch or listen for errors:
+
+```typescript
+import { initDB, onDatabaseInitError, onModelOperationError } from '@wakit/waorm'
+
+onDatabaseInitError((err) => console.error('DB init failed:', err))
+onModelOperationError((err) => console.error('Model op failed:', err))
+
+await initDB({ ... })
 ```
 
 ## Example
