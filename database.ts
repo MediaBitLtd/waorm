@@ -5,7 +5,11 @@ import { DB_INIT_ERROR, dispatch } from './events'
 
 const databases: {[k: string]: WaormDatabaseConnection<any>} = {}
 
-export const clearDatabases = () => { for (const k in databases) delete databases[k] }
+export const clearDatabases = () => {
+  for (const k in databases) {
+    delete databases[k]
+  }
+}
 
 export const initDB = async <T = IDBDatabase> (config: WaormDatabaseConfig<T>) => {
   if (databases[config.name]) {

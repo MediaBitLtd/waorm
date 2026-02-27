@@ -11,7 +11,9 @@ interface MemoryEngine {
 
 const updateIndexes = (engine: MemoryEngine, config: WaormDatabaseConfig<MemoryEngine>, storeName: string, key: string, data: Resource) => {
   const storeConfig = config.stores.find(s => s.name === storeName)
-  if (! storeConfig) return
+  if (! storeConfig) {
+    return
+  }
 
   const storeIndexes = engine.indexes.get(storeName)!
 
@@ -22,13 +24,17 @@ const updateIndexes = (engine: MemoryEngine, config: WaormDatabaseConfig<MemoryE
     // Remove old key from all index values
     for (const [, keys] of indexMap) {
       const idx = keys.indexOf(key)
-      if (idx !== -1) keys.splice(idx, 1)
+      if (idx !== -1) {
+        keys.splice(idx, 1)
+      }
     }
 
     // Add new index value
     const value = (data as any)[fieldPath]?.toString()
     if (value !== undefined && value !== null) {
-      if (! indexMap.has(value)) indexMap.set(value, [])
+      if (! indexMap.has(value)) {
+        indexMap.set(value, [])
+      }
       indexMap.get(value)!.push(key)
     }
   })
@@ -36,12 +42,16 @@ const updateIndexes = (engine: MemoryEngine, config: WaormDatabaseConfig<MemoryE
 
 const removeFromIndexes = (engine: MemoryEngine, config: WaormDatabaseConfig<MemoryEngine>, storeName: string, key: string) => {
   const storeIndexes = engine.indexes.get(storeName)
-  if (! storeIndexes) return
+  if (! storeIndexes) {
+    return
+  }
 
   for (const [, indexMap] of storeIndexes) {
     for (const [, keys] of indexMap) {
       const idx = keys.indexOf(key)
-      if (idx !== -1) keys.splice(idx, 1)
+      if (idx !== -1) {
+        keys.splice(idx, 1)
+      }
     }
   }
 }
@@ -51,10 +61,14 @@ const applyPagination = (items: Resource[], options?: WaormCursorOptions): Resou
   const limit = options?.limit
   const direction = options?.direction || 'asc'
 
-  if (direction !== 'asc') items = [...items].reverse()
+  if (direction !== 'asc') {
+    items = [...items].reverse()
+  }
 
   items = items.slice(offset)
-  if (limit) items = items.slice(0, limit)
+  if (limit) {
+    items = items.slice(0, limit)
+  }
 
   return items
 }
@@ -89,14 +103,18 @@ const createDB = (config: WaormDatabaseConfig<MemoryEngine>): WaormDatabaseConne
       const operator = options?.operator || 'equals'
       const storeIndexes = engine.indexes.get(store)
       const indexMap = storeIndexes?.get(index)
-      if (! indexMap) return operator === 'equals' ? undefined : []
+      if (! indexMap) {
+        return operator === 'equals' ? undefined : []
+      }
 
       const storeData = engine.stores.get(store)!
 
       switch (operator) {
         case 'equals': {
           const keys = indexMap.get(search.toString())
-          if (! keys || keys.length === 0) return undefined
+          if (! keys || keys.length === 0) {
+            return undefined
+          }
           return storeData.get(keys[0])
         }
         case 'equals_many': {
@@ -105,7 +123,9 @@ const createDB = (config: WaormDatabaseConfig<MemoryEngine>): WaormDatabaseConne
             if (k.toLowerCase() === search.toString().toLowerCase()) {
               for (const key of keys) {
                 const r = storeData.get(key)
-                if (r) items.push(r)
+                if (r) {
+                  items.push(r)
+                }
               }
             }
           }
@@ -117,7 +137,9 @@ const createDB = (config: WaormDatabaseConfig<MemoryEngine>): WaormDatabaseConne
             if (k.toLowerCase().includes(search.toString().toLowerCase())) {
               for (const key of keys) {
                 const r = storeData.get(key)
-                if (r) items.push(r)
+                if (r) {
+                  items.push(r)
+                }
               }
             }
           }
@@ -129,7 +151,9 @@ const createDB = (config: WaormDatabaseConfig<MemoryEngine>): WaormDatabaseConne
             if (k.toLowerCase() !== search.toString().toLowerCase()) {
               for (const key of keys) {
                 const r = storeData.get(key)
-                if (r) items.push(r)
+                if (r) {
+                  items.push(r)
+                }
               }
             }
           }
@@ -141,7 +165,9 @@ const createDB = (config: WaormDatabaseConfig<MemoryEngine>): WaormDatabaseConne
             if (! k.toLowerCase().includes(search.toString().toLowerCase())) {
               for (const key of keys) {
                 const r = storeData.get(key)
-                if (r) items.push(r)
+                if (r) {
+                  items.push(r)
+                }
               }
             }
           }
@@ -154,7 +180,9 @@ const createDB = (config: WaormDatabaseConfig<MemoryEngine>): WaormDatabaseConne
 
       if (index) {
         const indexMap = engine.indexes.get(store)?.get(index)
-        if (! indexMap) return []
+        if (! indexMap) {
+          return []
+        }
 
         const items: Resource[] = []
         const sortedKeys = [...indexMap.keys()].sort()
@@ -163,7 +191,9 @@ const createDB = (config: WaormDatabaseConfig<MemoryEngine>): WaormDatabaseConne
           const keys = indexMap.get(k)!
           for (const key of keys) {
             const r = storeData.get(key)
-            if (r) items.push(r)
+            if (r) {
+              items.push(r)
+            }
           }
         }
 

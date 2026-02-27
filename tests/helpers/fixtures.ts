@@ -6,8 +6,12 @@ export class UserModel extends Model {
   name?: string
   email?: string
 
-  storeName() { return 'users' }
-  fields() { return ['id', 'name', 'email'] }
+  storeName() {
+    return 'users' 
+  }
+  fields() {
+    return ['id', 'name', 'email'] 
+  }
 
   relationships(): WaormRelationshipBag {
     return {
@@ -21,8 +25,12 @@ export class PostModel extends Model {
   title?: string
   user_id?: string
 
-  storeName() { return 'posts' }
-  fields() { return ['id', 'title', 'user_id'] }
+  storeName() {
+    return 'posts' 
+  }
+  fields() {
+    return ['id', 'title', 'user_id'] 
+  }
 
   relationships(): WaormRelationshipBag {
     return {
@@ -35,7 +43,13 @@ export class SlugModel extends Model {
   slug?: string
   name?: string
 
-  storeName() { return 'slugs' }
-  fields() { return ['slug', 'name'] }
-  getKeyField() { return 'slug' }
+  storeName() {
+    return 'slugs' 
+  }
+  fields() {
+    return ['slug', 'name'] 
+  }
+  getKeyField() {
+    return 'slug' 
+  }
 }

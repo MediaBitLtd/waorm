@@ -17,6 +17,7 @@ export default tseslint.config(
       'space-before-blocks': 'error',
       'arrow-spacing': 'error',
       'spaced-comment': ['error', 'always'],
+      'curly': ['error', 'all'],
     },
   },
 );
