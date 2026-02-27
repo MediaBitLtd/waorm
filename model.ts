@@ -18,7 +18,7 @@ interface ModelResource extends Resource {
 
 let connection: WaormDatabaseConnection<any>|undefined
 
-export const setDBConnection = <T>(databaseConnection: WaormDatabaseConnection<T>) => connection = databaseConnection
+export const setDBConnection = <T>(databaseConnection?: WaormDatabaseConnection<T>) => connection = databaseConnection
 
 export const generateNewId = (): string => 'generated_' + (Math.random() + 1).toString(36).substring(2)
 
@@ -283,9 +283,9 @@ export default abstract class Model <R = ModelResource, E = any> {
 
   protected prepareBag(data?: any): ModelParamBag {
     return this[paramBagSymbol] || {
-      lastUpdated: data['$waorm:params']?.lastUpdated || data[paramBagSymbol]?.lastUpdated,
-      lastSynced: data['$waorm:params']?.lastSynced || data[paramBagSymbol]?.lastSynced,
-      syncErrors: data['$waorm:params']?.syncErrors || data[paramBagSymbol]?.syncErrors || [],
+      lastUpdated: data?.['$waorm:params']?.lastUpdated || data?.[paramBagSymbol]?.lastUpdated,
+      lastSynced: data?.['$waorm:params']?.lastSynced || data?.[paramBagSymbol]?.lastSynced,
+      syncErrors: data?.['$waorm:params']?.syncErrors || data?.[paramBagSymbol]?.syncErrors || [],
     }
   }
 
