@@ -179,7 +179,7 @@ describe('many', () => {
 
   it('not_includes operator excludes partial match', async () => {
     const results = await new UserModel().many('name', 'Ali', { operator: 'not_includes' })
-    expect(results.every(u => !u.name!.includes('Ali'))).toBe(true)
+    expect(results.every(u => ! u.name!.includes('Ali'))).toBe(true)
   })
 
   it('respects limit', async () => {

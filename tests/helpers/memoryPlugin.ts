@@ -11,7 +11,7 @@ interface MemoryEngine {
 
 const updateIndexes = (engine: MemoryEngine, config: WaormDatabaseConfig<MemoryEngine>, storeName: string, key: string, data: Resource) => {
   const storeConfig = config.stores.find(s => s.name === storeName)
-  if (!storeConfig) return
+  if (! storeConfig) return
 
   const storeIndexes = engine.indexes.get(storeName)!
 
@@ -28,7 +28,7 @@ const updateIndexes = (engine: MemoryEngine, config: WaormDatabaseConfig<MemoryE
     // Add new index value
     const value = (data as any)[fieldPath]?.toString()
     if (value !== undefined && value !== null) {
-      if (!indexMap.has(value)) indexMap.set(value, [])
+      if (! indexMap.has(value)) indexMap.set(value, [])
       indexMap.get(value)!.push(key)
     }
   })
@@ -36,7 +36,7 @@ const updateIndexes = (engine: MemoryEngine, config: WaormDatabaseConfig<MemoryE
 
 const removeFromIndexes = (engine: MemoryEngine, config: WaormDatabaseConfig<MemoryEngine>, storeName: string, key: string) => {
   const storeIndexes = engine.indexes.get(storeName)
-  if (!storeIndexes) return
+  if (! storeIndexes) return
 
   for (const [, indexMap] of storeIndexes) {
     for (const [, keys] of indexMap) {
@@ -89,14 +89,14 @@ const createDB = (config: WaormDatabaseConfig<MemoryEngine>): WaormDatabaseConne
       const operator = options?.operator || 'equals'
       const storeIndexes = engine.indexes.get(store)
       const indexMap = storeIndexes?.get(index)
-      if (!indexMap) return operator === 'equals' ? undefined : []
+      if (! indexMap) return operator === 'equals' ? undefined : []
 
       const storeData = engine.stores.get(store)!
 
       switch (operator) {
         case 'equals': {
           const keys = indexMap.get(search.toString())
-          if (!keys || keys.length === 0) return undefined
+          if (! keys || keys.length === 0) return undefined
           return storeData.get(keys[0])
         }
         case 'equals_many': {
@@ -138,7 +138,7 @@ const createDB = (config: WaormDatabaseConfig<MemoryEngine>): WaormDatabaseConne
         case 'not_includes': {
           const items: Resource[] = []
           for (const [k, keys] of indexMap) {
-            if (!k.toLowerCase().includes(search.toString().toLowerCase())) {
+            if (! k.toLowerCase().includes(search.toString().toLowerCase())) {
               for (const key of keys) {
                 const r = storeData.get(key)
                 if (r) items.push(r)
@@ -154,7 +154,7 @@ const createDB = (config: WaormDatabaseConfig<MemoryEngine>): WaormDatabaseConne
 
       if (index) {
         const indexMap = engine.indexes.get(store)?.get(index)
-        if (!indexMap) return []
+        if (! indexMap) return []
 
         const items: Resource[] = []
         const sortedKeys = [...indexMap.keys()].sort()

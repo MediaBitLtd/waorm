@@ -112,7 +112,7 @@ const createDB = (config: WaormDatabaseConfig<WindowLocalStorage>): WaormDatabas
       const operator = options?.operator || 'equals'
       const direction = options?.direction || 'asc'
       const items: Resource[] = []
-      let i = 0;
+      let i = 0
 
       const indexValues = JSON.parse(localStorage.getItem(`WAORM:__${config.name}_${store}_${index}`) || '{}')
 
@@ -234,7 +234,7 @@ const createDB = (config: WaormDatabaseConfig<WindowLocalStorage>): WaormDatabas
       const direction = options?.direction || 'asc'
 
       const items: Resource[] = []
-      let i = 0;
+      let i = 0
 
       const bag = index
         ? JSON.parse(localStorage.getItem(`WAORM:__${config.name}_${store}_${index}`) || '{}')

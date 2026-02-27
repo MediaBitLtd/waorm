@@ -41,8 +41,8 @@ export const isInstance = (resource: ModelResource) => {
 }
 
 export default abstract class Model <R = ModelResource, E = any> {
-  public id?: ModelResource['id'] = undefined;
-  public [paramBagSymbol]?: ModelParamBag<E> = undefined;
+  public id?: ModelResource['id'] = undefined
+  public [paramBagSymbol]?: ModelParamBag<E> = undefined
 
   public static PER_PAGE = 15
 
