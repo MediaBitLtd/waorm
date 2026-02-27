@@ -86,6 +86,9 @@ export interface WaormStoreIndex {
 export {
   onDatabaseInitError,
   onModelOperationError,
+  offDatabaseInitError,
+  offModelOperationError,
+  clearEventListeners,
 } from './events'
 
 export {
