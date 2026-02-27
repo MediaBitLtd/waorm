@@ -5,6 +5,7 @@
     "outDir": "./dist",
     "module": "ESNext",
     "target": "esnext",
+    "moduleResolution": "bundler",
     "types": [],
 
     // Other Outputs
@@ -32,5 +33,6 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-  }
+  },
+  "exclude": ["tests", "vitest.config.ts"]
 }

@@ -250,4 +250,4 @@ const plugin: WaormConnectionPlugin<IDBDatabase> = {
   }
 }
 
-export default plugin;
+export default plugin

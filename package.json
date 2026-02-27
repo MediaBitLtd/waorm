@@ -1,12 +1,13 @@
 {
   "name": "@wakit/waorm",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest",
+    "lint": "eslint ."
   },
   "keywords": [
     "orm",
@@ -18,6 +19,9 @@
   "description": "ORM for javascript",
   "devDependencies": {
     "@types/node": "^25.0.3",
-    "typescript": "^5.9.3"
+    "eslint": "^10.0.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1",
+    "vitest": "^4.0.18"
   }
 }
