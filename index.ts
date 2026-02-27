@@ -1,12 +1,28 @@
 import { initDB } from './database'
 import { collect } from './collector'
-import Model, { generateNewId, generateNewSlug } from './model'
+import Model, { generateNewId, generateNewSlug, isDirty, isNew, isInstance } from './model'
 
 export type WaormRelationshipBag = { [k: string]: WaormRelationship }
 
+export type WaormKey = string | number | IDBValidKey;
+
+export type WaormDate = string | Date;
+
 export interface Resource {
-  id: string | number;
-  created_at: string; // todo maybe a date type
+  id?: WaormKey;
+  created_at?: WaormDate | undefined;
+}
+
+export interface ModelParamBag<T = any> {
+  new?: boolean;
+  instance?: boolean;
+  original?: any;
+  markForDeletion?: boolean;
+  preloadRelations?: WaormRelationshipBag | undefined;
+
+  lastUpdated: WaormDate | undefined;
+  lastSynced: WaormDate | undefined;
+  syncErrors: T[];
 }
 
 export interface WaormConnectionPlugin<T> {
@@ -17,10 +33,10 @@ export interface WaormDatabaseConnection<T> {
   name: WaormDatabaseConfig<T>['name'];
   config: WaormDatabaseConfig<T>;
   getEngine: () => T | undefined;
-  get: (store: string, key: Resource['id']) => Promise<Resource | undefined>;
-  set: (store: string, key: Resource['id'], data: Resource) => Promise<Resource>;
+  get: (store: string, key: WaormKey) => Promise<Resource | undefined>;
+  set: (store: string, key: WaormKey, data: Resource) => Promise<Resource>;
   all: (store: string, index?: string, options?: WaormCursorOptions) => Promise<Resource[]|Resource|undefined>;
-  delete: (store: string, key: Resource['id']) => Promise<boolean>;
+  delete: (store: string, key: WaormKey) => Promise<boolean>;
   where: (store: string, index: string, search: string, options?: WaormSearchOptions) => Promise<Resource[]|Resource|undefined>;
 }
 
@@ -68,9 +84,17 @@ export interface WaormStoreIndex {
 }
 
 export {
+  onDatabaseInitError,
+  onModelOperationError,
+} from './events'
+
+export {
   Model,
   initDB,
   collect,
   generateNewId,
   generateNewSlug,
+  isDirty,
+  isNew,
+  isInstance,
 }

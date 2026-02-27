@@ -1,10 +1,20 @@
 import type {
-  Resource, WaormCursorOptions,
-  WaormDatabaseConnection,
+  ModelParamBag,
+  Resource,
+  WaormKey,
   WaormRelationship,
   WaormRelationshipBag,
-  WaormSearchOptions
+  WaormDatabaseConnection,
+  WaormCursorOptions,
+  WaormSearchOptions,
 } from './index'
+import { dispatch, MODEL_OP_ERROR } from './events'
+
+export const paramBagSymbol = Symbol('waorm:params')
+
+interface ModelResource extends Resource {
+  [paramBagSymbol]: ModelParamBag;
+}
 
 let connection: WaormDatabaseConnection<any>|undefined
 
@@ -14,34 +24,130 @@ export const generateNewId = (): string => 'generated_' + (Math.random() + 1).to
 
 export const generateNewSlug = (): string => Math.floor((new Date).getTime() / 1000) + (Math.random() + 1).toString(36).substring(2) + (new Date).getFullYear()
 
-export default abstract class Model <R = Resource> {
-  public id?: Resource['id'] = undefined
+export const isDirty = (resource: ModelResource) => {
+  if (resource[paramBagSymbol] && resource[paramBagSymbol].original) {
+    return JSON.stringify(resource) !== resource[paramBagSymbol].original
+  }
 
-  protected __preloadRelations?: WaormRelationshipBag | undefined = {}
+  return true
+}
 
-  public static PER_PAGE = 30
+export const isNew = (resource: ModelResource) => {
+  return ! resource[paramBagSymbol] || !! resource[paramBagSymbol].new
+}
 
+export const isInstance = (resource: ModelResource) => {
+  return !! resource[paramBagSymbol]?.instance
+}
+
+export default abstract class Model <R = ModelResource, E = any> {
+  public id?: ModelResource['id'] = undefined;
+  public [paramBagSymbol]?: ModelParamBag<E> = undefined;
+
+  public static PER_PAGE = 15
+
+  // Definitions
   abstract storeName(): string
 
   relationships(): WaormRelationshipBag {
     return {}
   }
 
+  fields(): string[] | undefined {
+    return undefined
+  }
+
   getKeyField(): string {
     return 'id'
   }
 
-  getKey(): Resource['id'] | undefined {
+  getKey(): WaormKey | undefined {
     // @ts-ignore
     return this[this.getKeyField()]
   }
 
-  generateKey(): Resource['id'] {
+  connection(): WaormDatabaseConnection<any>|undefined {
+    return connection
+  }
+
+  // Getters
+  isDirty(): boolean {
+    return isDirty(this.resource())
+  }
+
+  isClean(): boolean {
+    return ! isDirty(this.resource())
+  }
+
+  isNew(): boolean {
+    return isNew(this.resource())
+  }
+
+  isInstance(): boolean {
+    return isInstance(this.resource())
+  }
+
+  // Mutators
+  generateKey(): WaormKey {
     const key = generateNewId()
 
-    // @ts-ignore
-    this[this.getKeyField()] = key
+    if (this[paramBagSymbol]?.instance) {
+      // @ts-ignore
+      this[this.getKeyField()] = key
+    }
+
     return key
+  }
+
+  with(relationship: string): this {
+    const relation: WaormRelationship | undefined = this.relationships()[relationship]
+
+    if (! relation) {
+      throw new Error(`No relationship setup for this model with the key: ${relationship}`)
+    }
+
+
+    this[paramBagSymbol] = this.prepareBag()
+
+    if (! this[paramBagSymbol].preloadRelations) {
+      this[paramBagSymbol].preloadRelations = {}
+    }
+
+    this[paramBagSymbol].preloadRelations[relationship] = relation
+
+    return this
+  }
+
+  hydrate<T = R>(data: T): this {
+    const fields = this.fields()
+    const preloadedRelationships = this[paramBagSymbol]?.preloadRelations
+
+    for (const k in data) {
+      if (! fields || fields.includes(k)) {
+        // @ts-ignore
+        this[k] = data[k]
+      }
+    }
+
+    this[paramBagSymbol] = this.prepareBag(data)
+
+    // @ts-ignore
+    delete this['$waorm:params']
+
+    this[paramBagSymbol].new = this.getKey()?.toString().startsWith('generated') || ! this.getKey()
+    this[paramBagSymbol].instance = true
+    this[paramBagSymbol].original = JSON.stringify(this)
+    this[paramBagSymbol].preloadRelations = preloadedRelationships
+
+    return this
+  }
+
+  resource<T = R>(): T {
+    const data = JSON.parse(JSON.stringify(this))
+
+    data[paramBagSymbol] = this[paramBagSymbol]
+
+    return data as T
   }
 
   newInstance(): this {
@@ -49,34 +155,7 @@ export default abstract class Model <R = Resource> {
     return new this.constructor()
   }
 
-  connection(): WaormDatabaseConnection<any>|undefined {
-    return connection
-  }
-
-  hydrate<T = R>(data: T): this {
-    // todo maybe move this into a parameter bag
-    const preloadedRelationships = this.__preloadRelations
-
-    for (const k in data) {
-      // @ts-ignore
-      this[k] = data[k]
-    }
-
-    this.__preloadRelations = preloadedRelationships
-
-    return this
-  }
-
-  resource<T = R>(): T {
-    const data = {
-      ...this
-    }
-
-    delete data.__preloadRelations
-
-    return JSON.parse(JSON.stringify(data)) as T
-  }
-
+  // IO
   async get(key: Resource['id']): Promise<this | undefined> {
     try {
       const data = await this.connection()?.get(this.storeName(), this.parseKey(key))
@@ -87,10 +166,9 @@ export default abstract class Model <R = Resource> {
 
       this.hydrate(data)
 
-
       return await this.loadRelationships()
     } catch (err) {
-      // todo handle errors
+      dispatch(MODEL_OP_ERROR, err)
       throw err
     }
   }
@@ -103,10 +181,9 @@ export default abstract class Model <R = Resource> {
     }
 
     try {
-      delete this.__preloadRelations
-      await this.connection()?.set(this.storeName(), this.parseKey(key), this.resource())
+      await this.connection()?.set(this.storeName(), this.parseKey(key), this.resourceToSave())
     } catch (err) {
-      // todo handle errors
+      dispatch(MODEL_OP_ERROR, err)
       throw err
     }
 
@@ -115,6 +192,7 @@ export default abstract class Model <R = Resource> {
 
   async delete(): Promise<boolean> {
     const key = this.getKey()
+
     if (! key) {
       throw new Error('Model has no key to store. Make sure your key is hydrated')
     }
@@ -122,7 +200,7 @@ export default abstract class Model <R = Resource> {
     try {
       return await this.connection()?.delete(this.storeName(), this.parseKey(key)) || false
     } catch (err) {
-      // todo handle errors
+      dispatch(MODEL_OP_ERROR, err)
       throw err
     }
   }
@@ -138,7 +216,7 @@ export default abstract class Model <R = Resource> {
 
       return await this.loadRelationships()
     } catch (err) {
-      // todo handle errors
+      dispatch(MODEL_OP_ERROR, err)
       throw err
     }
   }
@@ -159,14 +237,15 @@ export default abstract class Model <R = Resource> {
       for (const k in resources) {
         if (resources[k]) {
           const model = this.newInstance().hydrate(resources[k])
-          model.__preloadRelations = this.__preloadRelations
+          // @ts-ignore // we will always have it preloaded
+          model[paramBagSymbol].preloadRelations = this[paramBagSymbol]?.preloadRelations
           items.push(await model.loadRelationships())
         }
       }
 
       return items
     } catch (err) {
-      // todo handle errors
+      dispatch(MODEL_OP_ERROR, err)
       throw err
     }
   }
@@ -187,38 +266,49 @@ export default abstract class Model <R = Resource> {
       for (const k in resources) {
         if (resources[k]) {
           const model = this.newInstance().hydrate(resources[k])
-          model.__preloadRelations = this.__preloadRelations
+          // @ts-ignore // we will always have it preloaded
+          model[paramBagSymbol].preloadRelations = this[paramBagSymbol]?.preloadRelations
           items.push(await model.loadRelationships())
         }
       }
 
       return items
     } catch (err) {
-      // todo handle errors
+      dispatch(MODEL_OP_ERROR, err)
       throw err
     }
   }
 
-  with(relationship: string): this {
-    const relation: WaormRelationship | undefined = this.relationships()[relationship]
+  // Protected
 
-    if (! relation) {
-      throw new Error(`No relationship setup for this model with the key: ${relationship}`)
+  protected prepareBag(data?: any): ModelParamBag {
+    return this[paramBagSymbol] || {
+      lastUpdated: data['$waorm:params']?.lastUpdated || data[paramBagSymbol]?.lastUpdated,
+      lastSynced: data['$waorm:params']?.lastSynced || data[paramBagSymbol]?.lastSynced,
+      syncErrors: data['$waorm:params']?.syncErrors || data[paramBagSymbol]?.syncErrors || [],
     }
+  }
 
-    if (! this.__preloadRelations) {
-      this.__preloadRelations = {}
-    }
+  protected resourceToSave<T = R>(): T {
+    const data = JSON.parse(JSON.stringify(this))
 
-    this.__preloadRelations[relationship] = relation
+    data['$waorm:params'] = {
+      lastUpdated: this[paramBagSymbol]?.lastUpdated,
+      lastSynced: this[paramBagSymbol]?.lastSynced,
+      syncErrors: this[paramBagSymbol]?.syncErrors || [],
+    } as ModelParamBag
 
-    return this
+    return data as T
   }
 
   protected async loadRelationships(): Promise<this> {
-    for (const relationship in this.__preloadRelations) {
-      if (this.__preloadRelations[relationship]) {
-        const relation: WaormRelationship | undefined = this.__preloadRelations[relationship]
+    for (const relationship in this[paramBagSymbol]?.preloadRelations) {
+      if (this[paramBagSymbol]?.preloadRelations[relationship]) {
+        const relation: WaormRelationship | undefined = this[paramBagSymbol].preloadRelations[relationship]
+
+        if (! relation) {
+          continue
+        }
 
         // @ts-ignore
         const model = (new relation.related)
@@ -249,7 +339,7 @@ export default abstract class Model <R = Resource> {
     }
 
     if (key.toString().trim() === '') {
-      return key
+      return key.toString().trim()
     }
 
     // @ts-ignore
